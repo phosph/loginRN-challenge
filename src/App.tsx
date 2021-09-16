@@ -1,13 +1,5 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import type {Node} from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -21,7 +13,7 @@ import Home from './pages/Home';
 import {StoreProvider} from './store';
 import {NativeRouter, Route} from 'react-router-native';
 
-const App: () => Node = () => {
+const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
 
   return (

@@ -1,7 +1,3 @@
-/**
- * @format
- * @flow
- */
 import {makeAutoObservable} from 'mobx';
 
 export interface CredentialData {

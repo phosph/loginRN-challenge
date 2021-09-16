@@ -1,10 +1,5 @@
-/**
- * @format
- * @flow
- */
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useCallback} from 'react';
-import type {Node} from 'react';
+import React, {useState, useCallback, FC} from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -23,7 +18,7 @@ import {useStore} from '../store';
 import type {CredentialData} from '../store/auth';
 import {useHistory} from 'react-router-native';
 
-const Login: () => Node = () => {
+const Login: FC = () => {
   const {auth} = useStore();
   const history = useHistory();
   // const isDarkMode = useColorScheme() === 'dark';
@@ -38,11 +33,8 @@ const Login: () => Node = () => {
 
   const onLogin = useCallback(async () => {
     const success = await auth.login(loginData);
-    if (success) {
-      history.push('/home');
-    } else {
-      ToastAndroid.show('credenciales inválidas', ToastAndroid.SHORT);
-    }
+    if (success) history.push('/home');
+    else ToastAndroid.show('credenciales inválidas', ToastAndroid.SHORT);
   }, [loginData, auth, history]);
 
   return (
