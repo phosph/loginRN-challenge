@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import {BackButton} from 'react-router-native';
-import {useStore} from '@store';
+import {useStore} from '@store/index';
 import {observer} from 'mobx-react-lite';
 
 const Home: FC = observer(() => {
@@ -18,9 +18,8 @@ const Home: FC = observer(() => {
   return (
     <View style={styles.container}>
       <BackButton />
-      <Text style={{color: '#fffc', fontSize: 20, marginBottom: 20}}>
-        Upload a Picture
-      </Text>
+      <Text style={styles.title}>Upload a Picture</Text>
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => picture.takePhoto()}>
@@ -30,6 +29,7 @@ const Home: FC = observer(() => {
         />
         <Text>From Camera</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => picture.selecFromGalery()}>
@@ -39,6 +39,7 @@ const Home: FC = observer(() => {
         />
         <Text>From Galery</Text>
       </TouchableOpacity>
+
       {picture.currentPicture && (
         <View style={{marginTop: 10}}>
           <TouchableOpacity
@@ -46,11 +47,13 @@ const Home: FC = observer(() => {
             onPress={() => picture.removeCurrentPicture()}>
             <Image source={require('../img/1x/close_black_24dp.png')} />
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.acceptButton}
             onPress={() => picture.uploadCurrentPicture()}>
             <Image source={require('../img/1x/done_white_24dp.png')} />
           </TouchableOpacity>
+
           <Image
             source={{
               uri: picture.currentPicture.uri,
@@ -74,6 +77,7 @@ const Home: FC = observer(() => {
 });
 
 const styles = StyleSheet.create({
+  title: {color: '#fffc', fontSize: 20, marginBottom: 20},
   button: {
     padding: 20,
     backgroundColor: '#fffa',

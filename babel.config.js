@@ -8,8 +8,15 @@ module.exports = {
         extensions: ['.ios.js', '.android.js', '.js', '.ts', '.tsx', '.json'],
         alias: {
           '@store': './src/store',
-          '~/*': 'src/*',
+          '@components': './src/components',
         },
+      },
+    ],
+    '@babel/plugin-proposal-logical-assignment-operators',
+    [
+      'module:react-native-dotenv',
+      {
+        moduleName: 'react-native-dotenv',
       },
     ],
   ],

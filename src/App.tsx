@@ -8,10 +8,12 @@ import {
   Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {NativeRouter, Route} from 'react-router-native';
 import Login from './pages/Login';
 import Home from './pages/Home';
-import {StoreProvider} from './store';
-import {NativeRouter, Route} from 'react-router-native';
+import {StoreProvider} from '@store/index';
+import AuthGuard from '@components/AuthGuard';
+import LoadingIndicator from '@components/LoadingIndicator';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -22,8 +24,11 @@ const App = () => {
         <SafeAreaView style={styles.safeArea}>
           <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
           <LinearGradient colors={['#011725', '#1e252d']} style={{flex: 1}}>
-            <Route exact path="/" component={Login} />
-            <Route exact path="/home" component={Home} />
+            <LoadingIndicator />
+            <Route exact path="/login" component={Login} />
+            <AuthGuard>
+              <Route exact path="/" component={Home} />
+            </AuthGuard>
           </LinearGradient>
         </SafeAreaView>
       </NativeRouter>

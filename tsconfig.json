@@ -12,8 +12,8 @@
     "target": "esnext",
     "baseUrl": "./",
     "paths": {
-      "~/*": ["src/*"],
-      "@store": ["src/store"]
+      "@components/*": ["src/components/*"],
+      "@store/*": ["src/store/*"]
     }
   },
   "include": ["src"],

@@ -5,56 +5,98 @@ import {
   StyleSheet,
   Text,
   View,
-  Dimensions,
   TextInput,
   Image,
   Pressable,
   TouchableOpacity,
   ToastAndroid,
+  useWindowDimensions,
 } from 'react-native';
-import {observable, action} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 import {Observer} from 'mobx-react-lite';
-import {useStore} from '../store';
-import type {CredentialData} from '../store/auth';
+import {useStore} from '@store/index';
+import type {CredentialData} from '@store/auth';
 import {useHistory} from 'react-router-native';
 
-const Login: FC = () => {
-  const {auth} = useStore();
-  const history = useHistory();
-  // const isDarkMode = useColorScheme() === 'dark';
+class LoginForm {
+  constructor() {
+    makeAutoObservable(this);
+  }
 
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [loginData] = useState<CredentialData>(() =>
-    observable({
-      email: '',
-      password: '',
-    }),
-  );
+  private _email = '';
+  get email() {
+    return this._email;
+  }
+  set email(value: string) {
+    this._hasErrors &&= false;
+    this._email = value;
+  }
+
+  private _password = '';
+  get password() {
+    return this._password;
+  }
+  set password(value: string) {
+    this._hasErrors &&= false;
+    this._password = value;
+  }
+
+  showPassword = false;
+
+  private _hasErrors = false;
+  get hasErrors() {
+    return this._hasErrors;
+  }
+  set hasErrors(value: boolean) {
+    this._hasErrors = value;
+  }
+
+  get mayButtonBeActive() {
+    return !this.hasErrors && !!(this.email && this.password);
+  }
+
+  toggleShowPassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  get credentialData(): CredentialData {
+    return {
+      email: this.email,
+      password: this.password,
+    };
+  }
+}
+
+const useLoginForm = () => {
+  const [loginData] = useState(() => new LoginForm());
+  return loginData;
+};
+
+const Login: FC = () => {
+  const {auth, misc} = useStore();
+  const history = useHistory();
+  const winDim = useWindowDimensions();
+  const loginData = useLoginForm();
 
   const onLogin = useCallback(async () => {
-    const success = await auth.login(loginData);
-    if (success) history.push('/home');
-    else ToastAndroid.show('credenciales inválidas', ToastAndroid.SHORT);
-  }, [loginData, auth, history]);
+    misc.setIsLoading(true);
+
+    const success = await auth.login(loginData.credentialData);
+
+    if (success) history.push('/');
+    else {
+      loginData.hasErrors = true;
+      ToastAndroid.show('credenciales inválidas', ToastAndroid.SHORT);
+    }
+    misc.setIsLoading(false);
+  }, [loginData, auth, misc, history]);
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <View
-        style={[
-          styles.container,
-          {minHeight: Dimensions.get('window').height},
-        ]}>
+      <View style={[styles.container, {minHeight: winDim.height}]}>
         {/* Header */}
         <View style={{flex: 1, alignItems: 'center'}}>
-          <Image
-            source={require('../img/idk.png')}
-            style={{
-              width: 819 * 0.4,
-              height: 167 * 0.4,
-              marginTop: 40,
-              marginBottom: 20,
-            }}
-          />
+          <Image source={require('../img/brand.png')} style={styles.brandImg} />
           <Text style={[styles.regularText, {fontSize: 16}]}>
             Helping peope evolve with work
           </Text>
@@ -66,9 +108,9 @@ const Login: FC = () => {
               {() => (
                 <TextInput
                   value={loginData.email}
-                  onChangeText={action(value => {
+                  onChangeText={value => {
                     loginData.email = value;
-                  })}
+                  }}
                   placeholder="E-mail"
                   placeholderTextColor="#333f4d"
                 />
@@ -84,27 +126,42 @@ const Login: FC = () => {
               {() => (
                 <TextInput
                   value={loginData.password}
-                  onChangeText={action(value => {
+                  onChangeText={value => {
                     loginData.password = value;
-                  })}
+                  }}
                   style={{width: 'auto', flex: 1}}
                   placeholder="Password"
                   placeholderTextColor="#333f4d"
-                  secureTextEntry={!showPassword}
+                  secureTextEntry={!loginData.showPassword}
                 />
               )}
             </Observer>
-            <Pressable onPress={() => setShowPassword(s => !s)}>
-              <Image
-                source={
-                  showPassword
-                    ? require('../img/1x/baseline_visibility_black_24dp.png')
-                    : require('../img/1x/baseline_visibility_off_black_24dp.png')
-                }
-                style={{width: 40, height: 40}}
-              />
+            <Pressable onPress={() => loginData.toggleShowPassword()}>
+              <Observer>
+                {() => (
+                  <Image
+                    source={
+                      loginData.showPassword
+                        ? require('../img/visible.png')
+                        : require('../img/unvisible.png')
+                      // ? require('../img/1x/baseline_visibility_black_24dp.png')
+                      // : require('../img/1x/baseline_visibility_off_black_24dp.png')
+                    }
+                    style={{width: 213 * 0.12, height: 184 * 0.12}}
+                  />
+                )}
+              </Observer>
             </Pressable>
           </View>
+          <Observer>
+            {() =>
+              loginData.hasErrors ? (
+                <Text style={styles.errorMessage}>
+                  E-mail or password is wrong!
+                </Text>
+              ) : null
+            }
+          </Observer>
         </View>
 
         {/* forgot password */}
@@ -115,9 +172,19 @@ const Login: FC = () => {
 
           {/* button */}
           <View>
-            <TouchableOpacity onPress={onLogin} style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>Log In</Text>
-            </TouchableOpacity>
+            <Observer>
+              {() => (
+                <TouchableOpacity
+                  onPress={onLogin}
+                  style={[
+                    styles.loginButton,
+                    !loginData.mayButtonBeActive && styles.loginButtonDisabled,
+                  ]}
+                  disabled={!loginData.mayButtonBeActive}>
+                  <Text style={styles.loginButtonText}>Log In</Text>
+                </TouchableOpacity>
+              )}
+            </Observer>
 
             <View
               style={{
@@ -140,10 +207,14 @@ const Login: FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    height: Dimensions.get('window').height,
-    width: Dimensions.get('window').width,
-    backgroundColor: '#011725',
+  errorMessage: {
+    color: 'red',
+  },
+  brandImg: {
+    width: 819 * 0.4,
+    height: 167 * 0.4,
+    marginTop: 40,
+    marginBottom: 20,
   },
   regularText: {
     color: '#fffa',
@@ -173,6 +244,7 @@ const styles = StyleSheet.create({
     color: '#22b08a',
     fontSize: 20,
   },
+  loginButtonDisabled: {opacity: 0.5},
 });
 
 export default Login;
